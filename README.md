@@ -138,7 +138,7 @@ Legend: ✅ Implemented · 🔶 Partial · 🔮 Planned
 | 12 | **Secure authentication** | ✅ | JWT access + refresh, bcrypt password hashing |
 | 13 | **Role‑Based Access Control** | ✅ | Admin · Clinician · Caregiver · Patient |
 | 14 | **Analytics dashboard** | ✅ | Fleet KPIs, risk distribution, device status, weekly/monthly charts |
-| 15 | **Realtime device ingest** | ✅ | ESP32 + vision worker stream over WebSockets → server fusion |
+| 15 | **Realtime device ingest** | ✅ | ESP32 insole bridge + MediaPipe vision worker stream over WebSockets → server fusion |
 | 16 | **Dark mode & responsive design** | ✅ | Light/dark themes, mobile drawer, glassmorphic chrome |
 | 17 | **TimescaleDB time‑series storage** | 🔶 | Hypertables auto‑created on Postgres; SQLite fallback for dev |
 | 18 | **Audit logging** | 🔶 | Sensitive‑action logging designed; partial coverage |
@@ -334,11 +334,15 @@ gaitguard/
 │       ├── Dockerfile              # ✅ Python image (repo‑root context)
 │       └── requirements.txt
 │
-│   └── vision/                      # ✅ MediaPipe pose worker
-│       ├── config.py               # landmark indices + thresholds
-│       ├── pose_util.py            # joint angles, symmetry, circumduction
-│       ├── gait_metrics.py         # GaitAnalyzer → PoseFrame metrics
-│       ├── worker.py               # webcam → MediaPipe → WS ingest
+│   ├── vision/                      # ✅ MediaPipe pose worker
+│   │   ├── config.py               # landmark indices + thresholds
+│   │   ├── pose_util.py            # joint angles, symmetry, circumduction
+│   │   ├── gait_metrics.py         # GaitAnalyzer → PoseFrame metrics
+│   │   ├── worker.py               # webcam → MediaPipe → WS ingest
+│   │   └── requirements.txt
+│   │
+│   └── bridge/                      # ✅ ESP32 insole bridge
+│       ├── esp32_bridge.py         # poll ESP32 /data → normalize → WS ingest
 │       └── requirements.txt
 │
 ├── packages/
