@@ -271,6 +271,7 @@ flowchart LR
 <tr><td><b>UX / Motion</b></td><td>Framer Motion, next‑themes (dark mode), lucide‑react, Zustand (live state)</td><td>✅</td></tr>
 <tr><td><b>Backend</b></td><td>FastAPI, Uvicorn, Pydantic v2, Python 3.9+</td><td>✅</td></tr>
 <tr><td><b>Realtime</b></td><td>WebSockets (Starlette), Redis pub/sub (with in‑process fallback)</td><td>✅</td></tr>
+<tr><td><b>Computer vision</b></td><td>MediaPipe Pose + OpenCV vision worker (<code>apps/vision</code>) streaming 33 landmarks + gait metrics</td><td>✅</td></tr>
 <tr><td><b>Risk model</b></td><td><code>gaitguard_fusion</code> — pure‑Python weighted rule engine (NumPy‑free, dependency‑free)</td><td>✅</td></tr>
 <tr><td><b>Database</b></td><td>PostgreSQL 16 + TimescaleDB (hypertables); SQLite + aiosqlite for zero‑infra dev</td><td>✅</td></tr>
 <tr><td><b>ORM</b></td><td>SQLAlchemy 2.0 (async), asyncpg / aiosqlite drivers</td><td>✅</td></tr>
@@ -331,6 +332,13 @@ gaitguard/
 │       │   └── services/           # seed
 │       ├── scripts/simulate.py     # ESP32 + vision stream simulator
 │       ├── Dockerfile              # ✅ Python image (repo‑root context)
+│       └── requirements.txt
+│
+│   └── vision/                      # ✅ MediaPipe pose worker
+│       ├── config.py               # landmark indices + thresholds
+│       ├── pose_util.py            # joint angles, symmetry, circumduction
+│       ├── gait_metrics.py         # GaitAnalyzer → PoseFrame metrics
+│       ├── worker.py               # webcam → MediaPipe → WS ingest
 │       └── requirements.txt
 │
 ├── packages/

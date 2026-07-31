@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { Radar, WifiOff } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
 import { useLiveSession } from "@/hooks/useLiveSession";
+import { useLiveStore } from "@/lib/store";
 import type { Patient } from "@/lib/types";
 import { SessionHeader } from "./SessionHeader";
 import { RiskGauge } from "./RiskGauge";
@@ -30,17 +32,28 @@ const Skeleton3D = dynamic(
   }
 );
 
-export function CockpitClient({ patient }: { patient: Patient }) {
-  const source = useLiveSession(patient.id);
+export function CockpitClient({
+  patient,
+  joinSessionId,
+}: {
+  patient: Patient;
+  joinSessionId?: string;
+}) {
+  const { source, sessionId } = useLiveSession(patient.id, joinSessionId);
+  const hasData = useLiveStore(
+    (s) => s.latestRisk !== null || s.latestPose !== null || s.sensorBuf.length > 0
+  );
 
   return (
     <AppShell
       title="Live Patient Monitor"
       subtitle={`${patient.name} · ${patient.room} · ${
-        source === "backend"
-          ? "live fusion via GaitGuard API"
-          : source === "simulated"
-          ? "local simulation (API offline)"
+        source === "offline"
+          ? "backend offline"
+          : source === "backend"
+          ? hasData
+            ? "live device feed"
+            : "awaiting sensor data"
           : "connecting…"
       }`}
     >
@@ -51,6 +64,29 @@ export function CockpitClient({ patient }: { patient: Patient }) {
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
         <SessionHeader patient={patient} />
+
+        {source === "offline" && (
+          <div className="flex items-center gap-3 rounded-clinical border border-critical/30 bg-critical/10 px-4 py-3 text-[13px] text-critical-ink">
+            <WifiOff size={16} className="shrink-0" />
+            <span>
+              Backend offline — start the GaitGuard API (<code className="rounded bg-black/10 px-1">uvicorn app.main:app</code>) to stream live data.
+            </span>
+          </div>
+        )}
+        {source === "backend" && !hasData && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-clinical border border-primary/30 bg-primary-soft px-4 py-3 text-[13px] text-ink-secondary">
+            <Radar size={16} className="shrink-0 animate-pulse text-primary" />
+            <span className="font-medium text-ink">Awaiting live sensor data.</span>
+            <span>
+              Connect the ESP32 insole or start the vision worker:
+            </span>
+            {sessionId && (
+              <code className="rounded bg-black/5 px-1.5 py-0.5 text-[12px] text-primary dark:bg-white/10">
+                python worker.py --session {sessionId}
+              </code>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-12 gap-3">
           {/* LEFT — Live camera + 3D skeleton overlay */}

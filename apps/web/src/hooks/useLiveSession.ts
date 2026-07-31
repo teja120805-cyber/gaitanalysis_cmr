@@ -1,69 +1,74 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MockStream } from "@/lib/mockStream";
 import { LiveClient } from "@/lib/liveClient";
-import { createSession, getToken, login, startSim, stopSim } from "@/lib/api";
-import { USE_BACKEND } from "@/lib/config";
+import { createSession, getToken, login, stopSim } from "@/lib/api";
 import { useLiveStore } from "@/lib/store";
 
-export type LiveSource = "connecting" | "backend" | "simulated";
+export type LiveSource = "connecting" | "backend" | "offline";
+
+export interface LiveState {
+  source: LiveSource;
+  sessionId: string | null;
+}
 
 /**
- * Drives a monitoring view. Tries the real backend (login → create session →
- * start server-side simulator → subscribe to the live WS); if the backend is
- * unreachable and mode is "auto", falls back to the in-browser mock so the demo
- * always runs. Returns which source is active for optional UI hinting.
+ * Connects a monitoring view to REAL backend data only — no simulator, no mock.
+ *
+ * - With `joinSessionId` (printed by the vision worker / a real device), it
+ *   subscribes to that session's live channel.
+ * - Without one, it creates a fresh session for the patient and subscribes; the
+ *   cockpit stays in an "awaiting sensor data" state until a real device
+ *   (ESP32 insole and/or the MediaPipe vision worker) streams into it.
+ *
+ * If the backend is unreachable the source is "offline" — the UI shows an honest
+ * empty/offline state rather than fabricated motion.
  */
-export function useLiveSession(patientId: string): LiveSource {
-  const [source, setSource] = useState<LiveSource>("connecting");
+export function useLiveSession(patientId: string, joinSessionId?: string): LiveState {
+  const [state, setState] = useState<LiveState>({
+    source: "connecting",
+    sessionId: joinSessionId ?? null,
+  });
 
   useEffect(() => {
     let cancelled = false;
-    let mock: MockStream | null = null;
     let live: LiveClient | null = null;
-    let sessionId: string | null = null;
-
-    const startMock = () => {
-      if (cancelled) return;
-      mock = new MockStream();
-      mock.start();
-      setSource("simulated");
-    };
+    let ownedSessionId: string | null = null;
 
     const boot = async () => {
       useLiveStore.getState().reset();
-
-      if (USE_BACKEND === "0") {
-        startMock();
-        return;
-      }
+      useLiveStore.getState().setConn("connecting");
 
       try {
-        useLiveStore.getState().setConn("connecting");
-        await login();
-        const session = await createSession(patientId);
-        sessionId = session.id;
-        await startSim(session.id);
+        // Best-effort auth (the live channel accepts anonymous in demo builds).
+        let token: string | null = null;
+        try {
+          token = await login();
+        } catch {
+          token = null;
+        }
 
-        // A cleanup may have fired while we were awaiting — undo and bail.
+        let sid = joinSessionId ?? null;
+        if (!sid) {
+          // Create a real session a device/worker can stream into. No simulator.
+          const session = await createSession(patientId);
+          sid = session.id;
+          ownedSessionId = sid;
+        }
+
         if (cancelled) {
-          stopSim(session.id);
+          if (ownedSessionId) stopSim(ownedSessionId);
           return;
         }
 
-        live = new LiveClient(session.id, getToken());
+        live = new LiveClient(sid, token ?? getToken());
         live.connect();
-        setSource("backend");
+        setState({ source: "backend", sessionId: sid });
       } catch (err) {
         if (cancelled) return;
-        if (USE_BACKEND === "1") {
-          console.error("[GaitGuard] backend required but unavailable", err);
-          useLiveStore.getState().setConn("offline");
-          return;
-        }
-        console.warn("[GaitGuard] backend unavailable — using local simulation", err);
-        startMock();
+        console.error("[GaitGuard] backend unavailable — no live data", err);
+        useLiveStore.getState().setConn("offline");
+        setState({ source: "offline", sessionId: null });
       }
     };
 
@@ -71,11 +76,11 @@ export function useLiveSession(patientId: string): LiveSource {
 
     return () => {
       cancelled = true;
-      mock?.stop();
       live?.close();
-      if (sessionId) stopSim(sessionId);
+      // Only tear down a session we created (never a joined device session).
+      if (ownedSessionId) stopSim(ownedSessionId);
     };
-  }, [patientId]);
+  }, [patientId, joinSessionId]);
 
-  return source;
+  return state;
 }
