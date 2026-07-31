@@ -353,6 +353,10 @@ gaitguard/
 │           ├── engine.py           # FusionState + RiskEngine (weighted rules)
 │       └── tests/test_engine.py    # smoke tests (healthy→Normal, PD→High)
 │
+├── firmware/
+│   └── esp32/                       # ✅ Smart-insole sketch (direct WS push)
+│       ├── gaitguard_esp32.ino
+│       └── README.md
 ├── infra/
 │   ├── docker-compose.yml           # ✅ web + api + timescaledb + redis
 │   └── schema.sql                   # 🔶 PostgreSQL DDL
@@ -363,7 +367,7 @@ gaitguard/
 ```
 
 > [!NOTE]
-> A `firmware/esp32/` directory and a `packages/contracts/` schema package are part of the roadmap and are **not** in the repository yet.
+> A `packages/contracts/` schema package is a roadmap item and is **not** in the repository yet.
 
 ---
 
@@ -1090,7 +1094,8 @@ timeline
 ```
 
 - [ ] Alembic migrations + production Postgres/Timescale hardening
-- [ ] ESP32 firmware (`firmware/esp32/`) + real device provisioning
+- [x] ESP32 firmware (`firmware/esp32/`) — direct WebSocket push to `/ws/ingest/insole`
+- [x] MediaPipe vision worker (`apps/vision/`) + ESP32 insole bridge (`apps/bridge/`)
 - [ ] WebRTC live video with pose overlay
 - [ ] Trained gradient‑boosted risk model behind the `RiskEngine` interface
 - [ ] Doctor Assistant AI (RAG over ChromaDB), patient‑scoped

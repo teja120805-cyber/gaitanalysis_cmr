@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 
 from app.core.config import settings
@@ -13,11 +15,17 @@ from gaitguard_fusion import InsoleSample, PoseSample
 router = APIRouter()
 
 
+def _now_ms() -> float:
+    return time.time() * 1000.0
+
+
 def _parse_insole(d: dict) -> InsoleSample:
+    # Stamp server-receive time so devices with any clock (ESP32 millis(), NTP,
+    # epoch) align correctly in the fusion window.
     fsr = d["fsr"]
     imu = d["imu"]
     return InsoleSample(
-        t=float(d["t"]),
+        t=_now_ms(),
         fsr_left=[float(x) for x in fsr["left"]],
         fsr_right=[float(x) for x in fsr["right"]],
         ax=float(imu["ax"]), ay=float(imu["ay"]), az=float(imu["az"]),
@@ -28,7 +36,7 @@ def _parse_insole(d: dict) -> InsoleSample:
 def _parse_pose(d: dict) -> PoseSample:
     m = d["metrics"]
     return PoseSample(
-        t=float(d["t"]),
+        t=_now_ms(),
         cadence=float(m["cadence"]),
         step_length_sym=float(m["stepLengthSym"]),
         arm_swing_sym=float(m["armSwingSym"]),
