@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * GaitGuard design system — enterprise clinical, light-first (Philips / GE /
+ * Apple Health lineage): white surfaces, a blue→teal brand, generous radii,
+ * soft elevation, and glassmorphism reserved for the chrome (sidebar, topbar,
+ * overlays). Dark mode is a first-class, hand-tuned theme via `.dark`.
+ */
+
+:root {
+  /* Brand */
+  --brand-blue: #2563eb;
+  --brand-blue-600: #1d4ed8;
+  --brand-teal: #0d9488;
+  --brand-teal-500: #14b8a6;
+  --primary: #2563eb;
+  --primary-ink: #1d4ed8;
+  --accent: #0d9488;
+
+  /* Surfaces & chrome */
+  --app-bg: #eef3f9;
+  --plane: #eef3f9;
+  --surface-1: #ffffff;
+  --surface-2: #f4f7fc;
+  --surface-3: #eaf0f8;
+  --surface-elevated: #ffffff;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --line: rgba(15, 23, 42, 0.09);
+  --line-strong: rgba(15, 23, 42, 0.14);
+  --grid: rgba(15, 23, 42, 0.04);
+
+  /* Ink */
+  --ink: #0f1b2d;
+  --ink-secondary: #475569;
+  --muted: #8695a8;
+
+  /* Brand tints */
+  --primary-soft: rgba(37, 99, 235, 0.1);
+  --accent-soft: rgba(13, 148, 136, 0.12);
+  --vital: #0891b2;
+
+  /* Reserved status palette (paired always with icon + label) */
+  --status-good: #10b981;
+  --status-good-ink: #047857;
+  --status-warning: #f59e0b;
+  --status-warning-ink: #b45309;
+  --status-serious: #f97316;
+  --status-critical: #ef4444;
+  --status-critical-ink: #b91c1c;
+
+  /* Categorical chart series (validated light steps) */
+  --s-1: #2a78d6;
+  --s-2: #eb6834;
+  --s-3: #1baf7a;
+  --s-4: #eda100;
+  --s-5: #e87ba4;
+
+  /* Sequential blue ramp (pressure) — used inside the always-dark viewport */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 12px 28px -14px rgba(16, 24, 40, 0.16);
+  --shadow-pop: 0 8px 32px -8px rgba(16, 24, 40, 0.24);
+  --shadow-glow: 0 0 0 1px var(--primary-soft), 0 8px 28px -10px rgba(37, 99, 235, 0.4);
+
+  --pulse-color: rgba(37, 99, 235, 0.45);
+  color-scheme: light;
+}
+
+.dark {
+  --primary: #3b82f6;
+  --primary-ink: #93c5fd;
+  --accent: #2dd4bf;
+
+  --app-bg: #070b14;
+  --plane: #070b14;
+  --surface-1: #0f1826;
+  --surface-2: #141f31;
+  --surface-3: #1a2740;
+  --surface-elevated: #16223a;
+  --glass: rgba(15, 24, 38, 0.6);
+  --glass-strong: rgba(15, 24, 38, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --grid: rgba(255, 255, 255, 0.04);
+
+  --ink: #eef4ff;
+  --ink-secondary: #9fb0c6;
+  --muted: #64748b;
+
+  --primary-soft: rgba(59, 130, 246, 0.16);
+  --accent-soft: rgba(45, 212, 191, 0.16);
+  --vital: #22d3ee;
+
+  --status-good: #34d399;
+  --status-good-ink: #6ee7b7;
+  --status-warning: #fbbf24;
+  --status-warning-ink: #fcd34d;
+  --status-serious: #fb923c;
+  --status-critical: #f87171;
+  --status-critical-ink: #fca5a5;
+
+  --s-1: #3987e5;
+  --s-2: #d95926;
+  --s-3: #199e70;
+  --s-4: #c98500;
+  --s-5: #d55181;
+
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 16px 40px -20px rgba(0, 0, 0, 0.8);
+  --shadow-pop: 0 12px 40px -8px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 0 1px var(--primary-soft), 0 10px 34px -10px rgba(59, 130, 246, 0.5);
+
+  --pulse-color: rgba(59, 130, 246, 0.5);
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--line);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient brand aura behind the app — subtle, premium, only in light for airiness */
+.app-aura {
+  background:
+    radial-gradient(1200px 600px at 12% -8%, rgba(37, 99, 235, 0.08), transparent 60%),
+    radial-gradient(1000px 560px at 108% 4%, rgba(13, 148, 136, 0.08), transparent 55%);
+}
+.dark .app-aura {
+  background:
+    radial-gradient(1200px 600px at 12% -8%, rgba(59, 130, 246, 0.12), transparent 60%),
+    radial-gradient(1000px 560px at 108% 4%, rgba(45, 212, 191, 0.1), transparent 55%);
+}
+
+@layer components {
+  .panel {
+    border-radius: 1rem;
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-card);
+  }
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+  .glass-strong {
+    background: var(--glass-strong);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  /* An always-dark imaging viewport (PACS-style) for the 3D + heatmap canvases */
+  .viewport {
+    background: radial-gradient(120% 120% at 50% 0%, #10203a 0%, #0a1424 60%, #070f1c 100%);
+    border-radius: 0.85rem;
+  }
+  .brand-gradient {
+    background: linear-gradient(135deg, var(--brand-blue), var(--brand-teal));
+  }
+  .brand-text {
+    background: linear-gradient(120deg, var(--brand-blue), var(--brand-teal));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+.instrument-grid {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Recharts tooltip theming */
+.recharts-default-tooltip {
+  background: var(--surface-elevated) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-pop);
+  color: var(--ink);
+}
+.recharts-tooltip-item {
+  color: var(--ink-secondary) !important;
+}
+
+/* Print — isolate the report sheet, hide app chrome */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    overflow: visible !important;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

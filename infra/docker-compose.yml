@@ -1,0 +1,65 @@
+# GaitGuard — full stack in one command:
+#   cd infra && docker compose up --build
+# Then open http://localhost:3000  (API at http://localhost:8000/docs)
+
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: gaitguard
+      POSTGRES_PASSWORD: gaitguard
+      POSTGRES_DB: gaitguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - gaitguard_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gaitguard"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://gaitguard:gaitguard@db:5432/gaitguard
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: change-me-in-production-use-a-long-random-value
+      CORS_ORIGINS: http://localhost:3000
+      INGEST_TOKEN: gaitguard-device-token
+      SEED_ON_STARTUP: "1"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+      args:
+        # The browser reaches the API on the host-mapped port.
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+        NEXT_PUBLIC_USE_BACKEND: auto
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  gaitguard_db:

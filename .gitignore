@@ -1,0 +1,36 @@
+# Dependencies
+**/node_modules/
+**/.venv/
+venv/
+
+# Build output
+**/.next/
+**/out/
+**/build/
+**/dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite3
+
+# Environment / secrets
+**/.env
+**/.env.local
+**/.env*.local
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

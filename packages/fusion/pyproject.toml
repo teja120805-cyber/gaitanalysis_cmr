@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gaitguard-fusion"
+version = "0.1.0"
+description = "GaitGuard fusion engine — aligns insole + vision streams into a fall-risk assessment."
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gaitguard_fusion*"]
