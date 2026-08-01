@@ -41,7 +41,7 @@ const char* INGEST_TOKEN = "gaitguard-device-token";
 // Which foot this single insole maps to: 0 = both (mirror), 1 = left, 2 = right
 #define FOOT 0
 
-const uint16_t SEND_INTERVAL_MS = 25;   // ~40 Hz stream to the backend
+const uint16_t SEND_INTERVAL_MS = 50;   // ~20 Hz — stable for ESP32 + WiFi
 // ======================================================
 
 WebServer server(80);
@@ -118,9 +118,11 @@ void sendInsoleFrame() {
   imu["gy"] = gy / GYRO_LSB;
   imu["gz"] = gz / GYRO_LSB;
 
-  String out;
-  serializeJson(doc, out);
-  webSocket.sendTXT(out);
+  // Static buffer (not Arduino String) — avoids heap fragmentation that kills
+  // the WebSocket client when streaming continuously.
+  static char buf[384];
+  size_t n = serializeJson(doc, buf, sizeof(buf));
+  webSocket.sendTXT(buf, n);
 }
 
 // ==========================================
@@ -206,6 +208,8 @@ void setup() {
   webSocket.begin(BACKEND_HOST, BACKEND_PORT, path.c_str());
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(3000);
+  // Keep the link alive + detect dead connections cleanly (ping 15s, 3s timeout).
+  webSocket.enableHeartbeat(15000, 3000, 2);
   Serial.print("Streaming to ws://");
   Serial.print(BACKEND_HOST); Serial.print(":"); Serial.print(BACKEND_PORT);
   Serial.println(path);
