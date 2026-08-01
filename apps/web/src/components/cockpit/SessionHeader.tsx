@@ -14,8 +14,11 @@ export function SessionHeader({ patient }: { patient: Patient }) {
   const level = risk?.level ?? "normal";
   const meta = LEVEL[level];
 
-  const [now, setNow] = useState(Date.now());
+  // Null until mounted so server and client first-render the same text
+  // (avoids a hydration mismatch on the elapsed clock).
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
@@ -55,7 +58,7 @@ export function SessionHeader({ patient }: { patient: Patient }) {
           <Meta
             icon={<Clock size={13} />}
             label="Session"
-            value={elapsed(start, now)}
+            value={now === null ? "00:00" : elapsed(start, now)}
           />
           <Meta
             icon={<CircleDot size={13} className="text-good" />}
