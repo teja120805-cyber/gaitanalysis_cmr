@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Radar, WifiOff } from "lucide-react";
+import { WifiOff } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { useLiveStore } from "@/lib/store";
 import type { Patient } from "@/lib/types";
+import { ConnectDevice } from "./ConnectDevice";
 import { SessionHeader } from "./SessionHeader";
 import { RiskGauge } from "./RiskGauge";
 import { DriverBreakdown } from "./DriverBreakdown";
@@ -74,18 +75,7 @@ export function CockpitClient({
           </div>
         )}
         {source === "backend" && !hasData && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-clinical border border-primary/30 bg-primary-soft px-4 py-3 text-[13px] text-ink-secondary">
-            <Radar size={16} className="shrink-0 animate-pulse text-primary" />
-            <span className="font-medium text-ink">Awaiting live sensor data.</span>
-            <span>
-              Connect the ESP32 insole or start the vision worker:
-            </span>
-            {sessionId && (
-              <code className="rounded bg-black/5 px-1.5 py-0.5 text-[12px] text-primary dark:bg-white/10">
-                python worker.py --session {sessionId}
-              </code>
-            )}
-          </div>
+          <ConnectDevice patientId={patient.id} sessionId={sessionId} />
         )}
 
         <div className="grid grid-cols-12 gap-3">

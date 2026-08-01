@@ -47,6 +47,24 @@ const char* INGEST_TOKEN = "gaitguard-device-token";
 > Find `BACKEND_HOST` on the PC running the API (e.g. `ipconfig` → IPv4). The ESP32
 > and that PC must be on the **same WiFi/hotspot**.
 
+## Make the backend reachable (important)
+
+By default the API binds to `127.0.0.1`, which the ESP32 **cannot** reach. Start it
+bound to all interfaces, and open the port on the firewall:
+
+```bash
+cd apps/api
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+```powershell
+# Windows — allow inbound port 8000 (once)
+netsh advfirewall firewall add rule name="GaitGuard 8000" dir=in action=allow protocol=TCP localport=8000
+```
+
+Sanity check from any device on the network — open `http://<backend-ip>:8000/api/health`;
+you should get `{"status":"ok",...}`. If that fails, the ESP32 won't connect either.
+
 ## Run
 
 1. Start the backend (`apps/api`) and frontend (`apps/web`) on the PC.
@@ -80,3 +98,16 @@ Both streams now fuse into one explainable risk score.
   bilateral load.
 - The local page (`http://<esp32-ip>/`) and `/data` endpoint still work if you want
   to poll the device directly.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| WiFi OK but no `[WS] Connected` | `BACKEND_HOST` wrong, backend not started with `--host 0.0.0.0`, or firewall blocking the port |
+| `[WS] Disconnected` looping | `INGEST_TOKEN` must match the backend's `INGEST_TOKEN` (default `gaitguard-device-token`) |
+| Dashboard shows "awaiting sensor data" | The `?session=` in the URL must equal `SESSION_ID` in the sketch |
+| Can't reach backend from ESP32 | ESP32 and PC on different networks (e.g. PC on Ethernet, ESP32 on hotspot) |
+| MPU6050 FAILED on boot | Check SDA/SCL wiring (GPIO 21/22) and the sensor's I²C address |
+
+> Tip: the dashboard's **"Connect a device"** card (shown on a live session with no
+> data yet) prints the exact URL + config values for the current session.
