@@ -6,6 +6,7 @@ import {
   Radio,
   RefreshCw,
   Repeat,
+  Ruler,
   Square,
   Video,
   VideoOff,
@@ -29,6 +30,43 @@ const BONES: [number, number][] = [
 ];
 const DOTS = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
 
+// Gait joint angles: vertex index + the (a, vertex, c) triple + label + color.
+const ANGLE_JOINTS: { i: number; tri: [number, number, number]; k: string; c: string }[] = [
+  { i: 25, tri: [23, 25, 27], k: "L knee", c: "#22d3ee" },
+  { i: 26, tri: [24, 26, 28], k: "R knee", c: "#22d3ee" },
+  { i: 23, tri: [11, 23, 25], k: "L hip", c: "#60a5fa" },
+  { i: 24, tri: [12, 24, 26], k: "R hip", c: "#60a5fa" },
+  { i: 27, tri: [25, 27, 31], k: "L ankle", c: "#5eead4" },
+  { i: 28, tri: [26, 28, 32], k: "R ankle", c: "#5eead4" },
+];
+
+function angleAt(lms: LM[], a: number, b: number, c: number): number | null {
+  const A = lms[a], B = lms[b], C = lms[c];
+  if (!A || !B || !C) return null;
+  const r = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
+  let deg = Math.abs((r * 180) / Math.PI);
+  if (deg > 180) deg = 360 - deg;
+  return deg;
+}
+
+function trunkLean(lms: LM[]): number | null {
+  const ls = lms[11], rs = lms[12], lh = lms[23], rh = lms[24];
+  if (!ls || !rs || !lh || !rh) return null;
+  const shx = (ls.x + rs.x) / 2, shy = (ls.y + rs.y) / 2;
+  const hpx = (lh.x + rh.x) / 2, hpy = (lh.y + rh.y) / 2;
+  return Math.abs((Math.atan2(shx - hpx, Math.max(1e-4, hpy - shy)) * 180) / Math.PI);
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 type Status = "idle" | "loading" | "ready" | "error";
 
 export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
@@ -45,6 +83,7 @@ export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
   const chunksRef = useRef<Blob[]>([]);
   const mirrorRef = useRef<boolean>(true);
   const streamingRef = useRef<boolean>(false);
+  const showAnglesRef = useRef<boolean>(true);
 
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +91,7 @@ export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
   const [streaming, setStreaming] = useState(false);
   const [recording, setRecording] = useState(false);
   const [mirror, setMirror] = useState(true);
+  const [showAngles, setShowAngles] = useState(true);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string>("");
   const [fps, setFps] = useState(0);
@@ -63,6 +103,9 @@ export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
   useEffect(() => {
     streamingRef.current = streaming;
   }, [streaming]);
+  useEffect(() => {
+    showAnglesRef.current = showAngles;
+  }, [showAngles]);
 
   const refreshDevices = useCallback(async () => {
     try {
@@ -236,7 +279,68 @@ export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
         ctx.fill();
       }
     }
-    ctx.restore();
+    ctx.restore(); // end mirror transform — text drawn upright below
+
+    if (!lms || !showAnglesRef.current) return;
+    const flip = mirrorRef.current;
+    const sx = (p: LM) => (flip ? 1 - p.x : p.x) * w;
+    const sy = (p: LM) => p.y * h;
+    const fs = Math.max(11, Math.round(w / 42));
+
+    // Angle value tag beside each joint
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${fs}px system-ui, sans-serif`;
+    for (const j of ANGLE_JOINTS) {
+      const deg = angleAt(lms, j.tri[0], j.tri[1], j.tri[2]);
+      const p = lms[j.i];
+      if (deg === null || !p) continue;
+      const txt = `${Math.round(deg)}°`;
+      const x = sx(p) + 9;
+      const y = sy(p);
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = "rgba(3,10,20,0.72)";
+      roundRect(ctx, x - 5, y - fs * 0.8, tw + 10, fs * 1.6, 5);
+      ctx.fill();
+      ctx.fillStyle = j.c;
+      ctx.fillText(txt, x, y + 1);
+    }
+
+    // HUD panel — full angle read-out (also captured in recordings)
+    const hf = Math.max(10, Math.round(w / 52));
+    const rows: { k: string; c: string; deg: number | null }[] = ANGLE_JOINTS.map((j) => ({
+      k: j.k,
+      c: j.c,
+      deg: angleAt(lms, j.tri[0], j.tri[1], j.tri[2]),
+    }));
+    rows.push({ k: "Trunk", c: "#f59e0b", deg: trunkLean(lms) });
+    const pad = hf;
+    const lh = hf * 1.55;
+    const boxW = Math.min(w * 0.46, hf * 12);
+    const boxH = lh * rows.length + hf * 2.4;
+    ctx.fillStyle = "rgba(3,10,20,0.6)";
+    roundRect(ctx, 12, 12, boxW, boxH, 10);
+    ctx.fill();
+    ctx.textAlign = "left";
+    ctx.font = `700 ${hf * 0.85}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.62)";
+    ctx.fillText("JOINT ANGLES", 12 + pad, 12 + hf * 1.4);
+    let y = 12 + hf * 2.4 + lh * 0.2;
+    for (const r of rows) {
+      ctx.beginPath();
+      ctx.arc(12 + pad + 4, y + lh / 2, hf * 0.28, 0, Math.PI * 2);
+      ctx.fillStyle = r.c;
+      ctx.fill();
+      ctx.font = `500 ${hf}px system-ui, sans-serif`;
+      ctx.fillStyle = "rgba(255,255,255,0.86)";
+      ctx.textAlign = "left";
+      ctx.fillText(r.k, 12 + pad + 16, y + lh / 2);
+      ctx.textAlign = "right";
+      ctx.font = `700 ${hf}px ui-monospace, monospace`;
+      ctx.fillStyle = "#fff";
+      ctx.fillText(r.deg === null ? "—" : `${Math.round(r.deg)}°`, 12 + boxW - pad, y + lh / 2);
+      y += lh;
+    }
   }
 
   async function toggleStreaming() {
@@ -386,6 +490,17 @@ export function CameraCapture({ sessionId }: { sessionId?: string | null }) {
             className="flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-ink-secondary hover:text-ink disabled:opacity-40"
           >
             <Repeat size={13} /> {mirror ? "Mirror" : "Direct"}
+          </button>
+
+          <button
+            onClick={() => setShowAngles((a) => !a)}
+            disabled={!cameraOn}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40",
+              showAngles ? "bg-accent/15 text-accent" : "border border-line bg-surface-2 text-ink-secondary hover:text-ink"
+            )}
+          >
+            <Ruler size={13} /> Angles
           </button>
 
           {devices.length > 1 && (
