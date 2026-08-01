@@ -15,6 +15,7 @@ import { SensorReadout } from "./SensorReadout";
 import { FootPressureDistribution } from "./FootPressureDistribution";
 import { CenterOfPressure } from "./CenterOfPressure";
 import { DetectedEvents } from "./DetectedEvents";
+import { LiveGaitMetrics } from "./LiveGaitMetrics";
 import { CameraCapture } from "./CameraCapture";
 import { RiskTimeline } from "./RiskTimeline";
 import { AlertsFeed } from "./AlertsFeed";
@@ -82,6 +83,11 @@ export function CockpitClient({
             <RiskGauge />
             <SensorReadout />
             <DriverBreakdown />
+          </div>
+
+          {/* Full-width live gait metrics */}
+          <div className="col-span-12">
+            <LiveGaitMetrics />
           </div>
 
           {/* BOTTOM — timeline, detected events, alerts */}
