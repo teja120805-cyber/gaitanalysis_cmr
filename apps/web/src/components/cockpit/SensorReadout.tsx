@@ -8,7 +8,7 @@ import { Cpu } from "lucide-react";
 
 /** Raw live sensor values: 4 FSR per foot, 6-axis IMU, and the fused risk score. */
 export function SensorReadout() {
-  const frame = useSampled(() => useLiveStore.getState().latestInsole, 120);
+  const frame = useSampled(() => useLiveStore.getState().latestInsole, 60);
   const risk = useLiveStore((s) => s.latestRisk);
   const level = risk?.level ?? "normal";
 

@@ -22,7 +22,7 @@ export function LiveSensors() {
   const buf = useLiveStore((s) => s.sensorBuf);
   const metrics = useSampled(
     () => useLiveStore.getState().latestPose?.metrics ?? null,
-    500
+    250
   );
 
   const last = buf[buf.length - 1];

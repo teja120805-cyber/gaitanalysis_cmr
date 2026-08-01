@@ -41,7 +41,7 @@ const char* INGEST_TOKEN = "gaitguard-device-token";
 // Which foot this single insole maps to: 0 = both (mirror), 1 = left, 2 = right
 #define FOOT 0
 
-const uint16_t SEND_INTERVAL_MS = 50;   // ~20 Hz — stable for ESP32 + WiFi
+const uint16_t SEND_INTERVAL_MS = 33;   // ~30 Hz — stable with char buffer + heartbeat
 // ======================================================
 
 WebServer server(80);

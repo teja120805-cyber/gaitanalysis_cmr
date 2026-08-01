@@ -21,7 +21,7 @@ from app.ws.hub import hub
 from gaitguard_fusion import FusionState, InsoleSample, PoseSample
 
 _LEVEL_RANK = {"normal": 0, "mild": 1, "high": 2}
-RISK_PERIOD_S = 0.5
+RISK_PERIOD_S = 0.2   # 5 Hz fused assessment (snappier risk gauge/timeline)
 ALERT_COOLDOWN_S = 6.0
 
 

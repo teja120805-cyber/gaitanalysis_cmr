@@ -9,7 +9,7 @@ import { WS_BASE } from "./config";
 import { useLiveStore } from "./store";
 import type { InsoleFrame, PoseFrame, RiskUpdate, Alert } from "./types";
 
-const SENSOR_PUSH_MS = 80; // ~12.5 Hz into the chart buffer
+const SENSOR_PUSH_MS = 45; // ~22 Hz into the chart buffer
 
 export class LiveClient {
   private ws: WebSocket | null = null;

@@ -7,7 +7,7 @@ import { BarChart3 } from "lucide-react";
 
 /** Per-sensor plantar load and overall left/right balance. */
 export function FootPressureDistribution() {
-  const frame = useSampled(() => useLiveStore.getState().latestInsole, 120);
+  const frame = useSampled(() => useLiveStore.getState().latestInsole, 60);
   const L = frame?.fsr.left ?? [0, 0, 0, 0];
   const R = frame?.fsr.right ?? [0, 0, 0, 0];
   const totalL = L.reduce((a, b) => a + b, 0);
