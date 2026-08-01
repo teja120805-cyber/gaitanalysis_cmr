@@ -13,7 +13,6 @@ import { DriverBreakdown } from "./DriverBreakdown";
 import { FootHeatmap } from "./FootHeatmap";
 import { SensorReadout } from "./SensorReadout";
 import { FootPressureDistribution } from "./FootPressureDistribution";
-import { CenterOfPressure } from "./CenterOfPressure";
 import { DetectedEvents } from "./DetectedEvents";
 import { LiveGaitMetrics } from "./LiveGaitMetrics";
 import { CameraCapture } from "./CameraCapture";
@@ -66,10 +65,10 @@ export function CockpitClient({
         )}
 
         <div className="grid grid-cols-12 gap-3">
-          {/* LEFT — Live camera (MediaPipe) + center of pressure */}
+          {/* LEFT — Live camera (recording) + live gait metrics */}
           <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
             <CameraCapture sessionId={sessionId} />
-            <CenterOfPressure />
+            <LiveGaitMetrics />
           </div>
 
           {/* CENTER — pressure heatmap + distribution */}
@@ -83,11 +82,6 @@ export function CockpitClient({
             <RiskGauge />
             <SensorReadout />
             <DriverBreakdown />
-          </div>
-
-          {/* Full-width live gait metrics */}
-          <div className="col-span-12">
-            <LiveGaitMetrics />
           </div>
 
           {/* BOTTOM — timeline, detected events, alerts */}
