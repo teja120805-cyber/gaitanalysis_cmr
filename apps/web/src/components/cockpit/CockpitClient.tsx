@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { WifiOff } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
@@ -19,19 +18,6 @@ import { DetectedEvents } from "./DetectedEvents";
 import { CameraCapture } from "./CameraCapture";
 import { RiskTimeline } from "./RiskTimeline";
 import { AlertsFeed } from "./AlertsFeed";
-
-// Three.js must not run on the server.
-const Skeleton3D = dynamic(
-  () => import("./Skeleton3D").then((m) => m.Skeleton3D),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex min-h-[300px] items-center justify-center rounded-clinical border border-line bg-surface text-xs text-muted">
-        Initializing 3D pose engine…
-      </div>
-    ),
-  }
-);
 
 export function CockpitClient({
   patient,
@@ -79,17 +65,16 @@ export function CockpitClient({
         )}
 
         <div className="grid grid-cols-12 gap-3">
-          {/* LEFT — Live camera (MediaPipe) + 3D skeleton overlay */}
+          {/* LEFT — Live camera (MediaPipe) + center of pressure */}
           <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
             <CameraCapture sessionId={sessionId} />
-            <Skeleton3D />
+            <CenterOfPressure />
           </div>
 
-          {/* CENTER — pressure heatmap, distribution, CoP */}
+          {/* CENTER — pressure heatmap + distribution */}
           <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
             <FootHeatmap />
             <FootPressureDistribution />
-            <CenterOfPressure />
           </div>
 
           {/* RIGHT — risk gauge, live sensor values, drivers */}
