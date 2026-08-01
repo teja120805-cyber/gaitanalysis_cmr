@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
@@ -58,10 +59,15 @@ async def ingest_insole(
     rt = await sessions.on_ingest_connect(session)
     try:
         while True:
-            data = await ws.receive_json()
             try:
+                raw = await ws.receive_text()
+            except WebSocketDisconnect:
+                break
+            # A single malformed/partial frame must never tear down the socket.
+            try:
+                data = json.loads(raw)
                 rt.add_insole(_parse_insole(data))
-            except (KeyError, TypeError, ValueError):
+            except Exception:
                 continue
             await hub.publish(session, {"type": "insole", "payload": data})
     except WebSocketDisconnect:
@@ -83,10 +89,14 @@ async def ingest_vision(
     rt = await sessions.on_ingest_connect(session)
     try:
         while True:
-            data = await ws.receive_json()
             try:
+                raw = await ws.receive_text()
+            except WebSocketDisconnect:
+                break
+            try:
+                data = json.loads(raw)
                 rt.add_pose(_parse_pose(data))
-            except (KeyError, TypeError, ValueError):
+            except Exception:
                 continue
             await hub.publish(session, {"type": "pose", "payload": data})
     except WebSocketDisconnect:
