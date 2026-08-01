@@ -15,7 +15,7 @@ import { SensorReadout } from "./SensorReadout";
 import { FootPressureDistribution } from "./FootPressureDistribution";
 import { CenterOfPressure } from "./CenterOfPressure";
 import { DetectedEvents } from "./DetectedEvents";
-import { CameraFeed } from "./CameraFeed";
+import { CameraCapture } from "./CameraCapture";
 import { RiskTimeline } from "./RiskTimeline";
 import { AlertsFeed } from "./AlertsFeed";
 
@@ -89,9 +89,9 @@ export function CockpitClient({
         )}
 
         <div className="grid grid-cols-12 gap-3">
-          {/* LEFT — Live camera + 3D skeleton overlay */}
+          {/* LEFT — Live camera (MediaPipe) + 3D skeleton overlay */}
           <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
-            <CameraFeed />
+            <CameraCapture sessionId={sessionId} />
             <Skeleton3D />
           </div>
 
